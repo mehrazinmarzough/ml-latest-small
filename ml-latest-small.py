@@ -1,5 +1,4 @@
 import math
-
 import numpy as np
 import pandas as pd
 
@@ -24,19 +23,20 @@ def SVD(S):
     ST = np.transpose(S)
     STS = np.matmul(ST,S)
 
-    # Calculate Eigen Values and Singular Values
-    Landas, V = np.linalg.eig(STS)
+    # Calculate the eigenvalues and eigenvectors
+    eigenvalues, eigenvectors = np.linalg.eig(STS)
+
+    # Filter out negative eigenvalues and their corresponding eigenvectors
+    Landas = eigenvalues[eigenvalues >= 0]
+    V = eigenvectors[:, eigenvalues >= 0]
+    VT = np.transpose(V)
+
     r = len(Landas)
-    sigmas = np.zeros((r,m))
+    sigmas = Landas
     for i in range(r):
-        if(Landas[i] < 0):
-            Landas[i] = -Landas[i]
         sigmas[i] = math.sqrt(Landas[i])
-    sigmas = np.transpose(sigmas)
-    V = np.transpose(V)
 
-
-
+    
     # return U, sigma, Vt
 
 
