@@ -1,5 +1,9 @@
+import math
+
 import numpy as np
 import pandas as pd
+
+
 def CreateMatrix():
     # Load data from CSV files
     MoviesDf = pd.read_csv("movies.csv")
@@ -12,5 +16,30 @@ def CreateMatrix():
     return user_movie_ratings_matrix
 
 
-UserMovieRating = CreateMatrix()
+def SVD(S):
+    # Initialize matrices
+    m, n = S.shape  # m = number of users, n = number of movies
 
+    # S transpose S
+    ST = np.transpose(S)
+    STS = np.matmul(ST,S)
+
+    # Calculate Eigen Values and Singular Values
+    Landas, V = np.linalg.eig(STS)
+    r = len(Landas)
+    sigmas = np.zeros((r,m))
+    for i in range(r):
+        if(Landas[i] < 0):
+            Landas[i] = -Landas[i]
+        sigmas[i] = math.sqrt(Landas[i])
+    sigmas = np.transpose(sigmas)
+    V = np.transpose(V)
+
+
+
+    # return U, sigma, Vt
+
+
+UserMovieRating = CreateMatrix()
+matrix = np.random.rand(2,3)
+SVD(matrix)
