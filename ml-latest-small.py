@@ -2,12 +2,11 @@ import math
 import numpy as np
 import pandas as pd
 
+# Load data from CSV files
+MoviesDf = pd.read_csv("movies.csv")
+RatingsDf = pd.read_csv("ratings.csv")
 
 def CreateMatrix():
-    # Load data from CSV files
-    MoviesDf = pd.read_csv("movies.csv")
-    RatingsDf = pd.read_csv("ratings.csv")
-
     user_movie_ratings = pd.merge(RatingsDf, MoviesDf, on='movieId')[['userId', 'movieId', 'rating']]
     user_movie_ratings_pivot = user_movie_ratings.pivot_table(index='userId', columns='movieId', values='rating')
     user_movie_ratings_matrix = user_movie_ratings_pivot.fillna(0).values
@@ -52,5 +51,26 @@ def SVD(S):
 
 
 UserMovieRating = CreateMatrix()
-matrix = np.random.rand(2,3)
-SVD(matrix)
+predicted_ratings = SVD(UserMovieRating)
+
+# Get user ID from input
+user_id_input = int(input("Enter a user ID: "))
+# Check if the entered user ID is valid
+if user_id_input not in UserMovieRating.index:
+    print(f"User ID {user_id_input} not found in the dataset.")
+else:
+    # Get the index corresponding to the user ID
+    user_index = UserMovieRating.index.get_loc(user_id_input)
+
+    # Get predicted ratings for the user
+    user_ratings = predicted_ratings[user_index, :]
+
+    # Find indices of movies with highest predicted ratings
+    recommended_movie_indices = np.argsort(user_ratings)[::-1][:10]
+
+    # Print recommended movies
+    print(f"\nTop 10 Recommended Movies for User {user_id_input} : \n")
+    for index in recommended_movie_indices:
+        movie_id = UserMovieRating.columns[index] # Get movie ID from column index
+        movie_title = MoviesDf[MoviesDf['movieId'] == movie_id]['title'].values[0] # Get movie title from movie ID
+        print(f"Title: {movie_title}")
