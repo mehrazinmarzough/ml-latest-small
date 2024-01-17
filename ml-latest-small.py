@@ -30,14 +30,24 @@ def SVD(S):
     Landas = eigenvalues[eigenvalues >= 0]
     V = eigenvectors[:, eigenvalues >= 0]
     VT = np.transpose(V)
-
     r = len(Landas)
+
     sigmas = Landas
     for i in range(r):
         sigmas[i] = math.sqrt(Landas[i])
+    Sigma = np.diag(sigmas)
 
-    
-    # return U, sigma, Vt
+    U = np.array((r,m))
+
+    for i in range(r):
+        U = np.matmul(S,V)/sigmas[i]
+
+
+    print(U.shape)
+    print(Sigma.shape)
+    print(VT.shape)
+    X = np.matmul(U,Sigma)
+    X = np.matmul(X,VT)  # S = U * Sigma * V
 
 
 UserMovieRating = CreateMatrix()
