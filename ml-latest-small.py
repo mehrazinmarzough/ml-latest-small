@@ -32,22 +32,23 @@ def SVD(S):
     VT = np.transpose(V)
     r = len(Landas)
 
-    sigmas = Landas
-    for i in range(r):
-        sigmas[i] = math.sqrt(Landas[i])
+    sigmas = np.sqrt(Landas)
     Sigma = np.diag(sigmas)
 
-    U = np.array((r,m))
+    U = np.empty((m, r))
 
     for i in range(r):
-        U = np.matmul(S,V)/sigmas[i]
-
+        U[:, i] = np.matmul(S, V[:, i]) / sigmas[i]
 
     print(U.shape)
     print(Sigma.shape)
     print(VT.shape)
-    X = np.matmul(U,Sigma)
-    X = np.matmul(X,VT)  # S = U * Sigma * V
+    X = np.matmul(U, Sigma)
+    X = np.matmul(X, VT)  # S = U * Sigma * V
+    print(S)
+    print(X)
+
+    return X
 
 
 UserMovieRating = CreateMatrix()
