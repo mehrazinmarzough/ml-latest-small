@@ -44,33 +44,26 @@ def SVD(S):
     print(VT.shape)
     X = np.matmul(U, Sigma)
     X = np.matmul(X, VT)  # S = U * Sigma * V
-    print(S)
-    print(X)
 
-    return X
+    return U, Sigma, VT, S
 
 
 UserMovieRating = CreateMatrix()
-predicted_ratings = SVD(UserMovieRating)
+U, Sigma, VT, S = SVD(UserMovieRating)
 
-# Get user ID from input
-user_id_input = int(input("Enter a user ID: "))
-# Check if the entered user ID is valid
-if user_id_input not in UserMovieRating.index:
-    print(f"User ID {user_id_input} not found in the dataset.")
-else:
-    # Get the index corresponding to the user ID
-    user_index = UserMovieRating.index.get_loc(user_id_input)
+# Missing data prediction
+predicted_ratings = np.matmul(U, np.matmul(Sigma, VT))
 
-    # Get predicted ratings for the user
-    user_ratings = predicted_ratings[user_index, :]
+target_user_id = 10  # Replace with a specific user ID
 
-    # Find indices of movies with highest predicted ratings
-    recommended_movie_indices = np.argsort(user_ratings)[::-1][:10]
+user_predicted_ratings = predicted_ratings[target_user_id]
+unrated_movies = np.where(UserMovieRating[target_user_id] == 0)[0]
+unrated_movies_predicted_ratings = user_predicted_ratings[unrated_movies]
 
-    # Print recommended movies
-    print(f"\nTop 10 Recommended Movies for User {user_id_input} : \n")
-    for index in recommended_movie_indices:
-        movie_id = UserMovieRating.columns[index] # Get movie ID from column index
-        movie_title = MoviesDf[MoviesDf['movieId'] == movie_id]['title'].values[0] # Get movie title from movie ID
-        print(f"Title: {movie_title}")
+sorted_indices = np.argsort(unrated_movies_predicted_ratings)[::-1]
+recommended_movie_ids = unrated_movies[sorted_indices]
+
+top_n = 10  # Number of recommendations to show
+recommended_movies = MoviesDf.iloc[recommended_movie_ids[:top_n]]
+print("Recommended movies for user", target_user_id, ":")
+print(recommended_movies[['title', 'genres']])  # Assuming 'title' and 'genres' columns exist
