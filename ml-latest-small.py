@@ -1,10 +1,10 @@
-import math
 import numpy as np
 import pandas as pd
 
 # Load data from CSV files
 MoviesDf = pd.read_csv("movies.csv")
 RatingsDf = pd.read_csv("ratings.csv")
+
 
 def CreateMatrix():
     user_movie_ratings = pd.merge(RatingsDf, MoviesDf, on='movieId')[['userId', 'movieId', 'rating']]
@@ -20,7 +20,7 @@ def SVD(S):
 
     # S transpose S
     ST = np.transpose(S)
-    STS = np.matmul(ST,S)
+    STS = np.matmul(ST, S)
 
     # Calculate the eigenvalues and eigenvectors
     eigenvalues, eigenvectors = np.linalg.eig(STS)
@@ -39,31 +39,44 @@ def SVD(S):
     for i in range(r):
         U[:, i] = np.matmul(S, V[:, i]) / sigmas[i]
 
-    print(U.shape)
-    print(Sigma.shape)
-    print(VT.shape)
-    X = np.matmul(U, Sigma)
-    X = np.matmul(X, VT)  # S = U * Sigma * V
-
     return U, Sigma, VT, S
 
 
-UserMovieRating = CreateMatrix()
-U, Sigma, VT, S = SVD(UserMovieRating)
+def cosine_similarity(u, v):
+    dot_product = np.dot(u, v)
+    norm_u = np.linalg.norm(u)
+    norm_v = np.linalg.norm(v)
+    return dot_product / (norm_u * norm_v)
 
-# Missing data prediction
-predicted_ratings = np.matmul(U, np.matmul(Sigma, VT))
 
-target_user_id = 10  # Replace with a specific user ID
+def get_recommendations(user_id):
+    UserMovieRating = CreateMatrix()
+    U, Sigma, VT, S = SVD(UserMovieRating)
 
-user_predicted_ratings = predicted_ratings[target_user_id]
-unrated_movies = np.where(UserMovieRating[target_user_id] == 0)[0]
-unrated_movies_predicted_ratings = user_predicted_ratings[unrated_movies]
+    # Get the user vector
+    user_vector = S[user_id]
 
-sorted_indices = np.argsort(unrated_movies_predicted_ratings)[::-1]
-recommended_movie_ids = unrated_movies[sorted_indices]
+    # Calculate cosine similarities between the user vector and all movie vectors
+    movie_similarities = np.apply_along_axis(cosine_similarity, 1, VT, user_vector)
 
-top_n = 10  # Number of recommendations to show
-recommended_movies = MoviesDf.iloc[recommended_movie_ids[:top_n]]
-print("Recommended movies for user", target_user_id, ":")
-print(recommended_movies[['title', 'genres']])  # Assuming 'title' and 'genres' columns exist
+    # Sort movies by similarity scores and get the top N recommendations
+    N = 10  # Adjust the number of recommendations as needed
+    recommended_movie_indices = np.argsort(-movie_similarities)[:N]
+    recommended_movie_ids = np.array(MoviesDf['movieId'])[recommended_movie_indices]
+
+    recommended_movies = pd.DataFrame()
+    for i in range(10):
+        recommended_movies = pd.concat([recommended_movies,
+                                        MoviesDf.loc[recommended_movie_ids[i]].to_frame().T], ignore_index=True)
+
+    return recommended_movies.drop('movieId', axis=1)
+
+
+# Get user ID as input
+UserId = int(input("Enter user ID: "))
+
+# Get recommendations for the user
+recommendations = get_recommendations(UserId)
+
+print("Recommended movies for user", UserId, ":")
+print(recommendations)
